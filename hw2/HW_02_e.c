@@ -27,9 +27,10 @@ int main(int argc, char** argv) {
   }
 }
 
-// In "HW_02_d.c", the parent and child (mostly) alternate prints. However, "HW_02_e.c" always
-// prints every child count in order before printing every parent count. This is because the
-// parent waits for its child to terminate via `wait` before proceeding to count.
+// In "HW_02_d.c", the parent and child (mostly) alternate prints. However,
+// "HW_02_e.c" always prints every child count in order before printing every
+// parent count. This is because the parent waits for its child to terminate via
+// `wait` before proceeding to count.
 //
 //
 //

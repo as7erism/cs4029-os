@@ -16,8 +16,8 @@ int main(int argc, char** argv) {
   for (int i = 0; i < num_children; ++i) {
     child_pid = fork();
 
-    // if i am a child (the return value of fork is 0), i don't want to make any more children, so
-    // break
+    // if i am a child (the return value of fork is 0), i don't want to make any
+    // more children, so break
     if (child_pid == 0) {
       break;
     }
@@ -27,12 +27,11 @@ int main(int argc, char** argv) {
   if (child_pid == 0) {
     printf("Hello from child process %i\n", getpid());
   }
-  // otherwise, i have to wait until all my children are done. i will do so by waiting until `wait`
-  // returns -1 (error)
+  // otherwise, i have to wait until all my children are done. i will do so by
+  // waiting until `wait` returns -1 (error)
   else {
-    while (wait(NULL) != -1) {}
+    while (wait(NULL) != -1) {
+    }
     printf("Hello from parent process %i\n", getpid());
   }
-
 }
-

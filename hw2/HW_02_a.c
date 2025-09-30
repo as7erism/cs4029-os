@@ -1,14 +1,9 @@
 #include <stdio.h>
 
 int main(int argc, char** argv) {
-  int arg_count = 0;
-  while (arg_count < argc) {
-    // `argv` is a pointer to an array of pointers to arrays of chars
-    // ("strings"). pass `printf` the pointer to the `arg_count`st string by
-    // using `arg_count` as an offset for `argv` pointer.
-    printf("%s\n", *(argv + arg_count));
-
-    // go to the next argument
-    ++arg_count;
-  }
+  // argv is an array (pointer) of strings (arrays of chars) whose last element
+  // is the empty string. we can pass the string pointed to by argv to printf,
+  // incrememnting the pointer each time, until weve reached the empty string.
+  while (*argv != 0)
+    printf("%s\n", *(argv++));
 }
