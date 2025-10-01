@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -85,8 +86,17 @@ void ignore_signal(int signum) {}
 /* Shell Command Processing Routines                          */
 /**************************************************************/
 
+void handle_termination(pid_t pid, int status) {
+  // print proper termination message
+  if (WIFEXITED(status)) {
+    printf("%i terminated normally\n", pid);
+  } else if (WIFSTOPPED(status)) {
+    printf("%i is stopped\n", pid);
+  }
+}
+
 void execute(char** argv, char* raw_line_input) {
-  pid_t pid, wpid;
+  pid_t pid;
 
   if ((pid = fork()) < 0) { /* fork a child process           */
     printf("*** ERROR: forking child process failed\n");
@@ -94,16 +104,18 @@ void execute(char** argv, char* raw_line_input) {
   } else
 
       if (pid == 0) { /* for the child process:         */
-    /* The child is going to say what it should have done, then exit */
-    printf("The command line <%s> should have been executed here\n",
-           raw_line_input);
-    exit(0);
+    execvp(argv[0], argv);
+    // this will only run if the above call failed
+    printf("*** ERROR: executing %s failed\n", argv[0]);
+    exit(1);
   } else
 
   { /* for the parent:      */
-    // If we get here at all, this is the parent shell.  Maybe this would be a
-    // good place to do a "wait" of some kind.  Be careful, though, there's
-    // different kinds of waits...
+    int status;
+    // wait for the child to exit. ensure via `WUNTRACED` that we don't hang if
+    // our child was paused
+    waitpid(pid, &status, WUNTRACED);
+    handle_termination(pid, status);
 
     return;
   }
@@ -111,16 +123,22 @@ void execute(char** argv, char* raw_line_input) {
   return;
 }
 
-int printenv(char* const* envp) {
+void printenv(char* const* envp) {
+  // print each environment variable KEY=VALUE pair until we reach the empty
+  // string
   while (*envp)
     puts(*(envp++));
-
-  return 0;
 }
 
-int pwd() {
+void pwd() {
+  // print the cwd
   puts(getcwd(NULL, 0));
-  return 0;
+}
+
+void cd(char* const* argv) {
+  // the first argument will be the program name (cd), and the second will be
+  // the target path
+  chdir(argv[1]);
 }
 
 int main(int argc, char** argv, char** envp) {
@@ -157,13 +175,18 @@ int main(int argc, char** argv, char** envp) {
   // set the default prompt
   strcpy(shell_prompt, "SillyShell");
 
-  // Set signal handlers if you think you need to....
-  // set them here?
+  signal(SIGINT, ignore_signal);
+  signal(SIGTSTP, ignore_signal);
 
-  while (
-      1) {  // Maybe once per processing loop you could try to check if there's
-    // status signals coming from children, and then deal with them?
-    // Might this be a good place to do that?
+  while (1) {
+    // check for any children that have finished (perhaps after previously being
+    // paused)
+    int found_status;
+    pid_t found_pid = waitpid(0, &found_status, WNOHANG);
+    // if 0 or -1, we have no processes to worry about right now
+    if (found_pid > 0) {
+      handle_termination(found_pid, found_status);
+    }
 
     printf("%s> ", shell_prompt);  // display the shell prompt
 
@@ -203,11 +226,15 @@ int main(int argc, char** argv, char** envp) {
       else
 
           if (strcmp(line_argv[0], "printenv") == 0) {
-        exit(printenv(envp));
+        printenv(envp);
       } else
 
           if (strcmp(line_argv[0], "pwd") == 0) {
-        exit(pwd());
+        pwd();
+      } else
+
+          if (strcmp(line_argv[0], "cd") == 0) {
+        cd(line_argv);
       } else
 
           if (strcmp(line_argv[0], "newprompt") == 0) {
