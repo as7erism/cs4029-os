@@ -32,7 +32,7 @@ void child_main() {
 }
 
 int main() {
-  int children[NUM_CHILDREN];
+  pid_t children[NUM_CHILDREN];
 
   // fork `NUM_CHILDREN` times and put the resulting pids in `children`
   for (int i = 0; i < NUM_CHILDREN; ++i) {
