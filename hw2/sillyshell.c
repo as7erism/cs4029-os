@@ -1,3 +1,5 @@
+// Author: Aster Mayhew
+
 #include <errno.h>
 #include <signal.h>
 #include <stdio.h>
