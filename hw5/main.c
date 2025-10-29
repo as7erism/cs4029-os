@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define ARRAY_LENGTH 0
+#define ARRAY_LENGTH 100
 
 typedef struct ThreadArgs {
   int* ptr;
@@ -83,6 +83,7 @@ void merge(const int* const src1,
   size_t i2 = 0;
   size_t dest_index = 0;
 
+  // compare elements and merge until one of the source arrays is exhausted
   while (i1 < len1 && i2 < len2) {
     // choose the element to add to the output array in sorted order
     if (src1[i1] < src2[i2]) {
@@ -119,27 +120,30 @@ int main() {
   int create_result;
 
   // first half of array
-  ThreadArgs args1 = {
+  const ThreadArgs args1 = {
       .ptr = unsorted,
       .len = ARRAY_LENGTH / 2,
   };
   // second half of array
-  ThreadArgs args2 = {
+  const ThreadArgs args2 = {
       .ptr = unsorted + (ARRAY_LENGTH / 2),
       // handle odd `ARRAY_LENGTH`
       .len = (ARRAY_LENGTH + 1) / 2,
   };
 
+  // thread `t1` will sort the first half of the array via `args1`
   if ((create_result = pthread_create(&t1, NULL, sort_thread, (void*)&args1))) {
     printf("failed to create thread 1: %i", create_result);
     return create_result;
   }
 
+  // thread `t2` will sort the second half of the array via `args2`
   if ((create_result = pthread_create(&t2, NULL, sort_thread, (void*)&args2))) {
     printf("failed to create thread 2: %i", create_result);
     return create_result;
   }
 
+  // wait for sorting threads to finish
   pthread_join(t1, NULL);
   pthread_join(t2, NULL);
 
