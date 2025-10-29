@@ -4,14 +4,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define ARRAY_LENGTH 100
+#define ARRAY_LENGTH 51
 
 typedef struct ThreadArgs {
   int* ptr;
   size_t len;
 } ThreadArgs;
 
-void print_array(const int* const ptr, size_t const len);
+void print_array(const int* const ptr, const size_t len);
 void quicksort(int* const ptr, const size_t len);
 size_t partition(int* const ptr, const size_t len);
 void* sort_thread(void* const input);
@@ -69,7 +69,7 @@ size_t partition(int* const ptr, const size_t len) {
 }
 
 void* sort_thread(void* const input) {
-  // make sure that `input` points to a type compatible with ThreadArgs!
+  // make sure `input` points to an object of a type compatible with ThreadArgs!
   quicksort(((ThreadArgs*)input)->ptr, ((ThreadArgs*)input)->len);
   pthread_exit(0);
 }
@@ -102,18 +102,16 @@ void merge(const int* const src1,
 }
 
 void fill_random(int* const ptr, const size_t len) {
-  time_t t;
-  srand((unsigned)time(&t));
+  srand(time(NULL));
   for (size_t i = 0; i < len; ++i) {
     ptr[i] = rand() % 50;
   }
 }
 
 int main() {
-  int unsorted[ARRAY_LENGTH];
+  // populate array with random values
+  int* const unsorted = (int*)malloc(sizeof(int) * ARRAY_LENGTH);
   fill_random(unsorted, ARRAY_LENGTH);
-
-  int sorted[ARRAY_LENGTH];
 
   pthread_t t1;
   pthread_t t2;
@@ -147,9 +145,12 @@ int main() {
   pthread_join(t1, NULL);
   pthread_join(t2, NULL);
 
+  // allocate space for merging
+  int* const sorted = (int*)malloc(sizeof(int) * ARRAY_LENGTH);
+
   // merge two sorted halves of original array
   merge(unsorted, ARRAY_LENGTH / 2, unsorted + (ARRAY_LENGTH / 2),
         (ARRAY_LENGTH + 1) / 2, sorted);
 
   print_array(sorted, ARRAY_LENGTH);
-}
+}  // allocated memory freed
